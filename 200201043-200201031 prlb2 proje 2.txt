@@ -1,0 +1,194 @@
+#include "LiquidCrystal.h"
+#include <Keypad.h>
+#define FlamePin A2
+#define buzzer 22
+
+const int rs = 53, en = 52, d4 = 48, d5 = 49, d6 = 50, d7 = 51;
+LiquidCrystal lcd(rs,en,d4,d5,d6,d7);
+
+boolean flame=0;
+
+const int sensor=A0;
+
+float tempc=0;
+float vout;
+
+unsigned long oldtime=0;
+unsigned long newtime=0;
+
+//Password password = Password( "1234" );  // ŞİFRE BELİRLEME...
+const int yesilled=5;    // YEŞİL LED PİN ADLANDIRMA...
+const int kirmiziled=4;  // KIRMIZI LED PİN ADLANDIRMA...
+char *password="1234";
+
+const byte satir = 4;   
+const byte sutun = 4;
+
+int long wait=40000;
+
+const int pir=A1;
+const int role=2;
+boolean sensordegeri=0;
+
+int count=0;
+int wrong=0;
+char getkey[4];
+int i=0;
+char tus_takimi[satir][sutun] = {   
+  {'7','8','9' ,'A'},
+  {'4','5','6','B'},
+  {'1','2','3','C'},
+  {'*','0','#','D'}
+};
+
+const byte satirPin[satir] = { 13,12,11,10 }; // SATIR PİNLERİ TANIMLAMA...
+const byte sutunPin[sutun] = { 9,8,7,6 };    // SUTUN PİNLERİ TANIMLAMA...
+
+Keypad keypad = Keypad( makeKeymap(tus_takimi), satirPin, sutunPin, satir, sutun );  // KEYPAD HARİTA OLUŞTURMA...
+int j=0;
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  pinMode(yesilled,OUTPUT);
+  pinMode(kirmiziled,OUTPUT);
+  pinMode(sensor,INPUT);
+  lcd.begin (16,2);                                    
+  lcd.setCursor(0, 0);
+  lcd.print(" TEMPERATURE   ");      
+  lcd.setCursor(0, 1);
+  lcd.print(" IS WORKING  ");
+  //for(int i=0;i<20000;i++){}
+  delay(400);
+  lcd.clear();
+  pinMode(pir,INPUT);
+  pinMode(role,OUTPUT);
+  //lcd.begin(16,2);
+
+}
+
+
+
+
+
+
+void loop() {
+  lcd.begin(16,2);
+  newtime=millis(); 
+  char key1=keypad.getKey();//Keypad KONTROLÜ
+  if(key1){
+    
+ 
+       getkey[count]=key1;
+       count++;
+       
+
+  }
+
+  if(count==4){
+          
+         getkey[count]='\0';
+         if(strcmp(password,getkey)==0){
+
+           
+          digitalWrite(kirmiziled,LOW);
+          digitalWrite(yesilled,HIGH);
+                     
+          }
+
+          else{
+
+            digitalWrite(kirmiziled,HIGH);
+            digitalWrite(yesilled,LOW);
+            
+          }
+
+         count=0; 
+          
+      }
+   
+  //KEYPAD KONTROLÜ BİTİŞ
+  
+  // put your main code here, to run repeatedly:SICAKLIK SENSÖRÜ
+   vout=analogRead(sensor);
+   vout=vout*(5.0/1023.0)*100;
+   tempc=vout;
+   newtime=millis();
+   lcd.setCursor(0,0);
+   lcd.print("TEMPERATURE IS: ");
+   lcd.setCursor(0,1);
+   lcd.print(tempc,2);
+   lcd.println(" *C");
+   //j++;
+   delay(60);
+   for(int i=0;i<30000;i++);
+    
+    lcd.clear();
+   
+   
+   
+   if(tempc<20){
+
+       
+     lcd.println("Sicaklik dustu.");
+     for(int i=0;i<30000;i++);
+     delay(60);
+     
+       
+ 
+   }
+
+   if(tempc>30){
+    
+    lcd.setCursor(0,0);
+    lcd.print("Sicaklik");
+    lcd.setCursor(0,1);
+    lcd.print("yukseldi.");
+    delay(60);
+    for(int i=0;i<30000;i++);
+    
+   
+   }
+    
+    
+    lcd.clear();//TEMPERATURE BİTİŞ
+
+
+   //PIR SENSÖRÜ
+
+   sensordegeri=digitalRead(pir);
+
+   if(sensordegeri==1){
+    
+    digitalWrite(role,HIGH);
+    
+    
+  }
+
+   else{   
+  digitalWrite(role,LOW);
+  
+   }
+    
+   //PIR SENSÖRÜ BİTİŞ
+
+
+   //YANGIN SENSÖRÜ
+
+    flame = digitalRead(FlamePin);
+
+   if(flame==1){
+    
+  tone(buzzer,200);
+   
+  }
+
+
+  else{
+     noTone(buzzer);
+     
+    
+  }  
+  //YANGIN SENSÖRÜ BİTİŞ
+
+}
